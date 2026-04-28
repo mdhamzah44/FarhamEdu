@@ -50,11 +50,11 @@ FarhamEdu is a full-stack online education platform built with **Flask**, **Mong
 
 ## 📂 Project Structure
 FarhamEdu/
-│── app.py
-│── templates/
-│── static/
-│── requirements.txt
-│── README.md
+- │── app.py
+- │── templates/
+- │── static/
+- │── requirements.txt
+- │── README.md
 
 
 
