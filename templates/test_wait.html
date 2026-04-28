@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FarhamEdu Test</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f6f9;
+      text-align: center;
+    }
+
+    /* Header */
+    .header {
+      background: #2c3e50;
+      color: white;
+      padding: 15px 20px;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .header:hover {
+      background: #1a252f;
+    }
+
+    /* Container */
+    .container {
+      margin-top: 60px;
+      background: white;
+      padding: 30px;
+      width: 60%;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color: #2c3e50;
+    }
+
+    h3 {
+      color: #16a085;
+    }
+
+    #countdown {
+      margin-top: 20px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #e67e22;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Header -->
+  <div class="header" onclick="goHome()">
+    FarhamEdu
+  </div>
+
+  <!-- Main Content -->
+  <div class="container">
+    <h2 id="test-name">{{ test.name }}</h2>
+
+    <p>Test will start at:</p>
+    <h3 id="start-time">{{ test.start_time }}</h3>
+
+    <p id="countdown">Please wait...</p>
+  </div>
+
+  <script>
+    function goHome() {
+      window.location.href = "/LPstudenthome";
+    }
+
+    const startTime = new Date("{{ test.start_time }}").getTime();
+    const countdownEl = document.getElementById("countdown");
+
+    const timer = setInterval(function () {
+      const now = new Date().getTime();
+      const distance = startTime - now;
+
+      if (distance <= 0) {
+        clearInterval(timer);
+        countdownEl.innerHTML = "Test started!";
+        return;
+      }
+
+      const hours = Math.floor(distance / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      countdownEl.innerHTML =
+        `Starting in ${hours}h ${minutes}m ${seconds}s`;
+    }, 1000);
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>{{ course.name }}</title>
+
+<style>
+body{
+  font-family:Poppins;
+  padding:20px;
+  background:#f1f5f9;
+}
+
+h1{color:#2563eb;}
+
+.card{
+  background:white;
+  padding:15px;
+  margin:10px 0;
+  border-radius:10px;
+  box-shadow:0 5px 10px rgba(0,0,0,0.05);
+}
+
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  margin:3px;
+}
+
+.btn-blue{background:#2563eb;color:white;}
+.btn-red{background:#ef4444;color:white;}
+.btn-yellow{background:#f59e0b;color:white;}
+
+input{
+  padding:8px;
+  margin:5px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+.badge{
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
+}
+
+.upcoming{background:#dcfce7;color:#166534;}
+.cancelled{background:#fee2e2;color:#991b1b;}
+ /* Header */
+    .header {
+      background: #2c3e50;
+      color: white;
+      padding: 15px 20px;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .header:hover {
+      background: #1a252f;
+    }
+</style>
+</head>
+
+<body>
+<!-- Header -->
+  <div class="header" onclick="goHome()">
+    FarhamEdu
+  </div>
+
+<h1>{{ course.name }}</h1>
+<p>{{ course.desc }}</p>
+
+<!-- ================= CLASSES ================= -->
+<h2>📅 Classes</h2>
+
+<!-- ADD CLASS -->
+<div class="card">
+<h3>Add New Class</h3>
+
+<input id="newSubject" placeholder="Subject">
+<input type="date" id="newDate">
+<input type="time" id="newTime">
+
+<button class="btn-blue" onclick="addClass()">Add Class</button>
+</div>
+
+<!-- EXISTING CLASSES -->
+{% for c in classes %}
+<div class="card">
+
+<span class="badge {{ c.status }}">{{ c.status }}</span>
+
+<br><br>
+
+<input value="{{ c.subject }}" id="subject{{ c.class_id }}">
+
+<input type="number" value="{{ c.class_number }}" id="classnum{{ c.class_id }}" placeholder="Class Number">
+
+<input value="{{ c.category }}" id="category{{ c.class_id }}" placeholder="Category">
+
+<input type="date" value="{{ c.date }}" id="date{{ c.class_id }}">
+<input type="time" value="{{ c.time }}" id="time{{ c.class_id }}">
+
+{% if c.link %}
+<p>🔗 Existing Link:</p>
+{% else %}
+<p style="color:#f59e0b;">⚠ No link added</p>
+{% endif %}
+
+<input 
+  value="{{ c.link or '' }}" 
+  id="link{{ c.class_id }}" 
+  placeholder="Add / Update Class Link">
+
+<select id="status{{ c.class_id }}">
+    <option value="upcoming" {% if c.status=='upcoming' %}selected{% endif %}>Upcoming</option>
+    <option value="cancelled" {% if c.status=='cancelled' %}selected{% endif %}>Cancelled</option>
+    <option value="completed" {% if c.status=='completed' %}selected{% endif %}>Completed</option>
+</select>
+
+<br>
+
+<button class="btn-blue" onclick="updateClass('{{ c.class_id }}')">Update</button>
+
+<button class="btn-yellow" onclick="cancelClass('{{ c.class_id }}')">
+Cancel Class
+</button>
+
+<button class="btn-red" onclick="deleteClass('{{ c.class_id }}')">
+Delete
+</button>
+
+</div>
+{% endfor %}
+
+<button class="btn-blue" onclick="openTestModal()">➕ Create Test</button>
+
+<!-- ================= NOTES ================= -->
+<h2>📄 Notes</h2>
+
+<form id="noteForm">
+<input type="text" id="noteTitle" placeholder="Title">
+<input type="file" id="noteFile">
+<button class="btn-blue" type="submit">Upload</button>
+</form>
+
+<div id="notesList">
+
+{% for n in notes %}
+<div class="card">
+
+<a href="{{ n.file_url }}" target="_blank">{{ n.title }}</a>
+
+<br><br>
+
+<input value="{{ n.title }}" id="noteTitle{{ n.note_id }}">
+
+<button class="btn-blue" onclick="updateNote('{{ n.note_id }}')">Edit</button>
+<button class="btn-red" onclick="deleteNote('{{ n.note_id }}')">Delete</button>
+
+</div>
+{% endfor %}
+
+</div>
+
+<!-- ================= TESTS ================= -->
+<h2>📝 Tests</h2>
+
+<div id="testsList">
+
+{% for t in tests %}
+<div class="card">
+
+<h3>{{ t.name }}</h3>
+
+<p>
+⏱ Duration: {{ t.duration }} mins <br>
+📅 Starts: {{ t.start_time }} <br>
+📊 Marks/Q: {{ t.marks_per_q }} | ❌ Negative: {{ t.negative_marks }}
+</p>
+
+<button class="btn-blue" onclick="viewResults('{{ t.test_id }}')">
+View Results
+</button>
+
+</div>
+{% endfor %}
+
+</div>
+
+<!-- ================= TEST MODAL ================= -->
+<div id="testModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+
+<div style="
+    background:white;
+    width:600px;
+    margin:50px auto;
+    padding:20px;
+    border-radius:10px;
+    max-height:80vh;
+    overflow-y:auto;
+">
+
+<h2>Create Test</h2>
+
+<!-- STEP 1 -->
+<div id="step1">
+<input id="testName" placeholder="Test Name"><br>
+
+<input type="number" id="testDuration" placeholder="Duration (minutes)"><br>
+
+<input type="number" id="subject_count" placeholder="Number of subjects"><br>
+
+<input type="datetime-local" id="startTime"><br>
+
+<input type="number" id="marksPerQ" placeholder="Marks per question"><br>
+
+<input type="number" id="negativeMarks" placeholder="Negative marks"><br>
+
+<button class="btn-blue" onclick="goStep2()">Next</button>
+</div>
+
+<!-- STEP 2 -->
+<div id="step2" style="display:none;">
+    <h3>Enter Subjects</h3>
+    <div id="subjects_container"></div>
+    <button class="btn-blue" onclick="startQuestions()">Next</button>
+</div>
+
+<!-- STEP 3 -->
+<div id="step3" style="display:none;">
+
+<h3 id="qCount"></h3>
+
+<textarea id="qText" placeholder="Enter Question"></textarea><br>
+
+<input id="optA" placeholder="Option A"><br>
+<input id="optB" placeholder="Option B"><br>
+<input id="optC" placeholder="Option C"><br>
+<input id="optD" placeholder="Option D"><br>
+
+<label>Correct:</label>
+<select id="correct">
+<option value="0">A</option>
+<option value="1">B</option>
+<option value="2">C</option>
+<option value="3">D</option>
+</select>
+
+<br><br>
+
+<button class="btn-blue" onclick="nextQuestion()">Next Question</button>
+</div>
+
+<!-- STEP 4 -->
+<div id="step4" style="display:none;">
+<h3>All questions added ✅</h3>
+<button class="btn-blue" onclick="submitTest()">Finish & Save</button>
+</div>
+
+<br>
+<button class="btn-red" onclick="closeTestModal()">Close</button>
+
+</div>
+</div>
+
+
+<!-- ================= RESULTS MODAL ================= -->
+<div id="resultModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+
+<div style="
+    background:white;
+    width:600px;
+    margin:50px auto;
+    padding:20px;
+    border-radius:10px;
+    max-height:80vh;
+    overflow-y:auto;
+">
+
+<h2>Test Results</h2>
+
+
+<div id="resultsContainer"></div>
+<br>
+<button id="backBtn" class="btn-yellow" style="display:none;" onclick="goBack()">
+⬅ Back
+</button>
+
+<button class="btn-red" onclick="closeResultModal()">Close</button>
+
+</div>
+</div>
+
+
+<script>
+      function goHome() {
+      window.location.href = "/LPteachershome";
+    }
+    function toggleDarkMode(){
+    document.body.classList.toggle("dark");
+    localStorage.setItem("theme",
+        document.body.classList.contains("dark")?"dark":"light"
+    );
+}
+
+window.onload=function(){
+
+    if(localStorage.getItem("theme")==="dark"){
+        document.body.classList.add("dark");
+    }
+
+    if(window.innerWidth <= 1024){
+        document.getElementById("planner").checked=true;
+    }
+    
+}
+</script>
+<script>
+
+/* ================= ADD CLASS ================= */
+function addClass(){
+
+fetch("/add-class",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+    course_id:"{{ course.course_id }}",
+    subject:document.getElementById("newSubject").value,
+    date:document.getElementById("newDate").value,
+    time:document.getElementById("newTime").value
+})
+})
+.then(res=>res.json())
+.then(()=>{
+    alert("Class added");
+    location.reload();
+});
+}
+
+
+/* ================= UPDATE CLASS ================= */
+function updateClass(id){
+
+fetch("/update-class",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+    class_id:id,
+    subject:document.getElementById("subject"+id).value,
+    class_number:document.getElementById("classnum"+id).value,
+    category:document.getElementById("category"+id).value,
+    date:document.getElementById("date"+id).value,
+    time:document.getElementById("time"+id).value,
+    status:document.getElementById("status"+id).value,
+    link:document.getElementById("link"+id).value
+})
+})
+.then(()=>alert("Updated"));
+}
+
+
+/* ================= CANCEL CLASS ================= */
+function cancelClass(id){
+
+fetch("/cancel-class/"+id,{
+method:"POST"
+})
+.then(()=>{
+    alert("Class cancelled");
+    location.reload();
+});
+}
+
+
+/* ================= DELETE CLASS ================= */
+function deleteClass(id){
+
+if(!confirm("Delete class permanently?")) return;
+
+fetch("/delete-class/"+id,{
+method:"DELETE"
+})
+.then(()=>location.reload());
+}
+
+
+/* ================= NOTES ================= */
+document.getElementById("noteForm").addEventListener("submit", function(e){
+e.preventDefault();
+
+let formData = new FormData();
+formData.append("title", document.getElementById("noteTitle").value);
+formData.append("file", document.getElementById("noteFile").files[0]);
+formData.append("course_id", "{{ course.course_id }}");
+
+fetch("/upload-note",{method:"POST",body:formData})
+.then(res=>res.json())
+.then(()=>{
+    alert("Uploaded");
+    location.reload();
+});
+});
+
+
+/* ================= EDIT NOTE ================= */
+function updateNote(id){
+
+fetch("/upload-note", {
+    method: "POST",
+    body: formData
+})
+.then(res => res.json())
+.then(data => {
+    if(data.error){
+        alert("❌ " + data.error);
+        return;
+    }
+
+    alert("✅ Uploaded");
+    location.reload();
+});
+}
+
+
+/* ================= DELETE NOTE ================= */
+function deleteNote(id){
+
+if(!confirm("Delete note?")) return;
+
+fetch("/delete-note/"+id,{
+method:"DELETE"
+})
+.then(()=>location.reload());
+}
+let resultsCache = [];   // ✅ store results globally
+let currentTestId = "";  // ✅ store test id
+
+function viewResults(test_id){
+
+currentTestId = test_id;
+
+fetch("/get-results/" + test_id)
+.then(res => res.json())
+.then(data => {
+
+    resultsCache = data;  // ✅ save data
+
+    renderResultsList();  // ✅ use separate function
+
+    document.getElementById("backBtn").style.display = "none"; // hide back
+
+    document.getElementById("resultModal").style.display = "block";
+
+});
+}
+
+function renderResultsList(){
+
+let container = document.getElementById("resultsContainer");
+container.innerHTML = "";
+
+if(resultsCache.length === 0){
+    container.innerHTML = "<p>No attempts yet</p>";
+}
+
+resultsCache.forEach(r => {
+
+    let div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+        <b style="cursor:pointer;color:#2563eb"
+           onclick="viewStudent('${currentTestId}','${r.user_id}')">
+           👤 ${r.student_name}
+        </b><br>
+        Score: ${r.score} <br>
+        Correct: ${r.correct} <br>
+        Wrong: ${r.wrong}
+    `;
+
+    container.appendChild(div);
+});
+}
+
+function viewStudent(test_id, user_id){
+
+fetch(`/get-attempt/${test_id}/${user_id}`)
+.then(res => res.json())
+.then(data => {
+
+    let container = document.getElementById("resultsContainer");
+    container.innerHTML = "";
+
+    document.getElementById("backBtn").style.display = "inline-block"; // ✅ show back
+
+    data.forEach((q, index) => {
+
+        let div = document.createElement("div");
+        div.className = "card";
+
+        let optionsHTML = "";
+
+        q.options.forEach((opt, i) => {
+
+            let style = "";
+
+            if(i === q.correct){
+                style = "color:green;font-weight:bold;";
+            }
+
+            if(i === q.marked){
+                style += " text-decoration:underline;";
+            }
+
+            optionsHTML += `<p style="${style}">
+                ${String.fromCharCode(65+i)}. ${opt}
+            </p>`;
+        });
+
+        div.innerHTML = `
+            <b>Q${index+1}: ${q.question}</b>
+            ${optionsHTML}
+            <p>
+                Your Answer: ${q.marked === -1 ? "Not Answered" : String.fromCharCode(65+q.marked)}
+                <br>
+                ${q.is_correct ? "✅ Correct" : (q.marked === -1 ? "⚪ Unanswered" : "❌ Wrong")}
+            </p>
+        `;
+
+        container.appendChild(div);
+    });
+
+});
+}
+function goBack(){
+    renderResultsList(); // reload results
+    document.getElementById("backBtn").style.display = "none"; // hide again
+}
+function closeResultModal(){
+    document.getElementById("resultModal").style.display = "none";
+}
+</script>
+<script>
+
+let testData = {
+    name:"",
+    duration:0,
+    start_time:"",
+    course_id:"{{ course.course_id }}",
+    teacher_id:"{{ teacher_id }}",
+    marks_per_q:0,
+    negative_marks:0,
+    subjects:[],
+    questions:[]
+};
+
+let subjectPlan = [];
+let totalQuestions = 0;
+let currentQ = 0;
+
+/* OPEN MODAL */
+function openTestModal(){
+    document.getElementById("testModal").style.display="block";
+}
+
+/* CLOSE MODAL */
+function closeTestModal(){
+    location.reload();
+}
+
+/* STEP 1 → STEP 2 */
+function goStep2(){
+
+    let count = parseInt(document.getElementById("subject_count").value);
+
+    if(!count || count <= 0){
+        alert("Enter valid subject count");
+        return;
+    }
+
+    testData.name = document.getElementById("testName").value;
+    testData.duration = parseInt(document.getElementById("testDuration").value);
+    testData.start_time = document.getElementById("startTime").value;
+    testData.marks_per_q = parseFloat(document.getElementById("marksPerQ").value);
+    testData.negative_marks = parseFloat(document.getElementById("negativeMarks").value);
+
+    generateSubjects(count);
+
+    document.getElementById("step1").style.display="none";
+    document.getElementById("step2").style.display="block";
+}
+
+/* GENERATE SUBJECT INPUTS */
+function generateSubjects(count){
+
+    let container = document.getElementById("subjects_container");
+    container.innerHTML = "";
+
+    for(let i=0; i<count; i++){
+        container.innerHTML += `
+            <div class="card">
+                <input type="text" class="subject_input" placeholder="Subject ${i+1}">
+                <input type="number" class="subject_q_count" placeholder="Questions count">
+            </div>
+        `;
+    }
+}
+
+/* STEP 2 → STEP 3 */
+function startQuestions(){
+
+    let subjectInputs = document.querySelectorAll(".subject_input");
+    let subjectQCounts = document.querySelectorAll(".subject_q_count");
+
+    subjectPlan = [];
+    totalQuestions = 0;
+
+    for(let i=0; i<subjectInputs.length; i++){
+
+        let name = subjectInputs[i].value;
+        let count = parseInt(subjectQCounts[i].value);
+
+        if(!name || !count){
+            alert("Fill all subject details");
+            return;
+        }
+
+        subjectPlan.push({ name:name, count:count });
+        totalQuestions += count;
+    }
+
+    testData.subjects = subjectPlan;
+
+    currentQ = 0;
+
+    document.getElementById("step2").style.display="none";
+    document.getElementById("step3").style.display="block";
+
+    loadQ();
+}
+
+/* FIND CURRENT SUBJECT */
+function getCurrentSubject(){
+
+    let sum = 0;
+
+    for(let s of subjectPlan){
+        sum += s.count;
+        if(currentQ < sum){
+            return s.name;
+        }
+    }
+    return "";
+}
+
+/* LOAD QUESTION */
+function loadQ(){
+
+    let subject = getCurrentSubject();
+
+    document.getElementById("qCount").innerText =
+        `Question ${currentQ+1} of ${totalQuestions} (${subject})`;
+
+    document.getElementById("qText").value="";
+    document.getElementById("optA").value="";
+    document.getElementById("optB").value="";
+    document.getElementById("optC").value="";
+    document.getElementById("optD").value="";
+    document.getElementById("correct").value="0";
+}
+
+/* NEXT QUESTION */
+function nextQuestion(){
+
+    let q = {
+        question: document.getElementById("qText").value,
+        options: [
+            document.getElementById("optA").value,
+            document.getElementById("optB").value,
+            document.getElementById("optC").value,
+            document.getElementById("optD").value
+        ],
+        correct: parseInt(document.getElementById("correct").value),
+        marks: testData.marks_per_q,
+        negative: testData.negative_marks,
+        subject: getCurrentSubject()
+    };
+
+    testData.questions.push(q);
+
+    currentQ++;
+
+    if(currentQ < totalQuestions){
+        loadQ();
+    } else {
+        document.getElementById("step3").style.display="none";
+        document.getElementById("step4").style.display="block";
+    }
+}
+
+/* SUBMIT TEST */
+function submitTest(){
+
+fetch("/create-test", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(testData)
+})
+.then(res=>res.json())
+.then(()=>{
+    alert("✅ Test Created");
+    location.reload();
+});
+
+}
+
+</script>
+
+
+</body>
+</html>

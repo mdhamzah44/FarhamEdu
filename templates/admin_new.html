@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Dashboard - FarhamEdu</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  font-family:Poppins;
+  display:flex;
+  background:#f4f7fb;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:240px;
+  height:100vh;
+  background:#1e293b;
+  color:white;
+  padding:20px;
+  position:fixed;
+}
+
+.sidebar h2{margin-bottom:30px;}
+
+.sidebar a{
+  display:block;
+  color:#cbd5e1;
+  padding:10px;
+  text-decoration:none;
+  border-radius:8px;
+  margin-bottom:5px;
+}
+.sidebar a:hover{background:#334155;color:white;}
+
+/* MAIN */
+.main{
+  margin-left:240px;
+  padding:25px;
+  width:100%;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:20px;
+}
+
+h1{color:#1e293b;}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:20px;
+}
+
+/* CARD */
+.card{
+  background:white;
+  padding:18px;
+  border-radius:14px;
+  box-shadow:0 10px 20px rgba(0,0,0,0.05);
+  transition:0.3s;
+}
+.card:hover{transform:translateY(-5px);}
+
+/* BUTTONS */
+button{
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  margin-top:8px;
+}
+
+.btn-primary{background:#2563eb;color:white;}
+.btn-danger{background:#ef4444;color:white;}
+.btn-warning{background:#f59e0b;color:white;}
+
+/* INPUT */
+input{
+  width:100%;
+  padding:8px;
+  margin:5px 0;
+  border-radius:6px;
+  border:1px solid #cbd5e1;
+}
+
+/* MODAL */
+.modal{
+  display:none;
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.5);
+}
+
+.modal-box{
+  background:white;
+  width:95%;
+  max-width:1000px;
+  margin:40px auto;
+  padding:20px;
+  border-radius:12px;
+  max-height:90vh;
+  overflow:auto;
+}
+
+/* TABS */
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.tab{
+  padding:8px 12px;
+  background:#e2e8f0;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.tab.active{
+  background:#2563eb;
+  color:white;
+}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+<h2>🎓 FarhamEdu</h2>
+<a href="#">Dashboard</a>
+<a href="#">Courses</a>
+<a href="#">Students</a>
+<a href="#">Settings</a>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+<div class="header">
+<h1>Admin Dashboard</h1>
+</div>
+
+<div class="grid" id="courseList"></div>
+</div>
+
+<!-- MODAL -->
+<div id="courseModal" class="modal">
+<div class="modal-box">
+
+<h2 id="courseTitle"></h2>
+
+<div class="tabs">
+<div class="tab active" onclick="showTab('classes', this)">Classes</div>
+<div class="tab" onclick="showTab('notes', this)">Notes</div>
+<div class="tab" onclick="showTab('tests', this)">Tests</div>
+</div>
+
+<div id="tabContent"></div>
+
+<br>
+<button class="btn-danger" onclick="closeModal()">Close</button>
+
+</div>
+</div>
+
+<script>
+
+let currentCourse = "";
+
+/* LOAD COURSES */
+function loadCourses(){
+fetch("/admin-data")
+.then(res=>res.json())
+.then(data=>{
+
+let html="";
+
+data.forEach(c=>{
+html+=`
+<div class="card">
+<h3>${c.name}</h3>
+<p>${c.desc}</p>
+
+<button class="btn-primary" onclick="openCourse('${c.course_id}')">Manage</button>
+<button class="btn-danger" onclick="deleteCourse('${c.course_id}')">Delete</button>
+</div>
+`;
+});
+
+document.getElementById("courseList").innerHTML = html;
+
+});
+}
+
+/* OPEN COURSE */
+function openCourse(id){
+currentCourse = id;
+
+fetch("/admin-course-data/"+id)
+.then(res=>res.json())
+.then(data=>{
+window.courseData = data;
+document.getElementById("courseTitle").innerText = data.course.name;
+
+/* default active tab fix */
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+document.querySelector(".tab").classList.add("active");
+
+showTab("classes");
+
+document.getElementById("courseModal").style.display="block";
+});
+}
+
+function closeModal(){
+document.getElementById("courseModal").style.display="none";
+}
+
+/* TAB FUNCTION (FIXED) */
+function showTab(tab, el){
+
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+if(el) el.classList.add("active");
+
+let data = window.courseData;
+let html = "";
+
+/* CLASSES */
+if(tab==="classes"){
+html+=`
+<h3>Classes</h3>
+<input id="sub" placeholder="Subject">
+<input type="date" id="date">
+<input type="time" id="time">
+<button class="btn-primary" onclick="addClass()">Add Class</button><br><br>
+`;
+
+data.classes.forEach(c=>{
+html+=`
+<div class="card">
+<input value="${c.subject}" id="s${c.class_id}">
+<input type="date" value="${c.date}" id="d${c.class_id}">
+<input type="time" value="${c.time}" id="t${c.class_id}">
+<input value="${c.link||""}" id="l${c.class_id}" placeholder="Meeting Link">
+
+<button class="btn-primary" onclick="updateClass('${c.class_id}')">Update</button>
+<button class="btn-danger" onclick="deleteClass('${c.class_id}')">Delete</button>
+</div>
+`;
+});
+}
+
+/* NOTES */
+if(tab==="notes"){
+html+=`
+<h3>Notes</h3>
+<input id="ntitle" placeholder="Title">
+<input type="file" id="nfile">
+<button class="btn-primary" onclick="uploadNote()">Upload</button><br><br>
+`;
+
+data.notes.forEach(n=>{
+html+=`
+<div class="card">
+<a href="${n.file_url}" target="_blank">${n.title}</a>
+<input value="${n.title}" id="n${n.note_id}">
+<button class="btn-warning" onclick="updateNote('${n.note_id}')">Edit</button>
+<button class="btn-danger" onclick="deleteNote('${n.note_id}')">Delete</button>
+</div>
+`;
+});
+}
+
+/* TESTS */
+if(tab==="tests"){
+html+=`
+<h3>Tests</h3>
+<button class="btn-primary" onclick="createTest()">Create Test</button><br><br>
+`;
+
+data.tests.forEach(t=>{
+html+=`
+<div class="card">
+<h4>${t.name}</h4>
+<p>${t.duration} mins</p>
+
+<button class="btn-warning" onclick="viewResults('${t.test_id}')">Results</button>
+<button class="btn-danger" onclick="deleteTest('${t.test_id}')">Delete</button>
+</div>
+`;
+});
+}
+
+document.getElementById("tabContent").innerHTML = html;
+}
+
+/* APIs */
+
+function deleteCourse(id){
+fetch("/delete-course/"+id,{method:"DELETE"})
+.then(()=>loadCourses());
+}
+
+function addClass(){
+fetch("/add-class",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+course_id:currentCourse,
+subject:sub.value,
+date:date.value,
+time:time.value
+})
+}).then(()=>openCourse(currentCourse));
+}
+
+function updateClass(id){
+fetch("/update-class-admin",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+class_id:id,
+subject:document.getElementById("s"+id).value,
+date:document.getElementById("d"+id).value,
+time:document.getElementById("t"+id).value,
+link:document.getElementById("l"+id).value
+})
+}).then(()=>openCourse(currentCourse));
+}
+
+function deleteClass(id){
+fetch("/delete-class/"+id,{method:"DELETE"})
+.then(()=>openCourse(currentCourse));
+}
+
+function uploadNote(){
+let fd=new FormData();
+fd.append("title",ntitle.value);
+fd.append("file",nfile.files[0]);
+fd.append("course_id",currentCourse);
+
+fetch("/upload-note",{method:"POST",body:fd})
+.then(()=>openCourse(currentCourse));
+}
+
+function updateNote(id){
+let fd=new FormData();
+fd.append("note_id",id);
+fd.append("title",document.getElementById("n"+id).value);
+
+fetch("/update-note",{method:"POST",body:fd})
+.then(()=>openCourse(currentCourse));
+}
+
+function deleteNote(id){
+fetch("/delete-note/"+id,{method:"DELETE"})
+.then(()=>openCourse(currentCourse));
+}
+
+/* INIT */
+loadCourses();
+
+</script>
+
+</body>
+</html>

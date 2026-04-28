@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel - FarhamEdu</title>
+<link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/324/324125.png">
+
+
+<style>
+body{
+  font-family:Poppins;
+  background:#f1f5f9;
+  padding:20px;
+}
+
+h1{color:#2563eb;}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:15px;
+}
+
+.card{
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 5px 10px rgba(0,0,0,0.05);
+}
+
+button{
+  padding:6px 10px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.btn-blue{background:#2563eb;color:white;}
+.btn-red{background:#ef4444;color:white;}
+.btn-yellow{background:#f59e0b;color:white;}
+
+.modal{
+  display:none;
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.5);
+}
+
+.modal-box{
+  background:white;
+  width:90%;
+  max-width:900px;
+  margin:40px auto;
+  padding:20px;
+  border-radius:10px;
+  max-height:85vh;
+  overflow-y:auto;
+}
+
+.tab{
+  margin:10px 5px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>⚙ Admin Dashboard</h1>
+
+<!-- ADD COURSE -->
+<div class="card">
+<h3>Add Course</h3>
+<sup>It's Disbled Currently</sup> <br>
+<input id="cname" placeholder="Name"disabled>
+<input id="cdesc" placeholder="Desc"disabled>
+<input id="cname" placeholder="Course Name"disabled>
+<input id="cdesc" placeholder="Description" disabled>
+<input id="ccat" placeholder="Category (UPSC / NEET etc)" disabled>
+<button class="btn-disabled" onclick="addCourse()" disabled>Add</button>
+</div>
+<br>
+<!-- COURSE LIST -->
+<div class="grid" id="courseList"></div>
+
+<!-- ================= MODAL ================= -->
+<div id="courseModal" class="modal">
+<div class="modal-box">
+
+<h2 id="courseTitle"></h2>
+
+<button class="tab btn-blue" onclick="showTab('classes')">Classes</button>
+<button class="tab btn-blue" onclick="showTab('notes')">Notes</button>
+<button class="tab btn-blue" onclick="showTab('tests')">Tests</button>
+
+<hr>
+
+<div id="tabContent"></div>
+
+<br>
+<button class="btn-red" onclick="closeModal()">Close</button>
+
+</div>
+</div>
+
+<script>
+
+let currentCourse = "";
+
+/* ================= LOAD COURSES ================= */
+function loadCourses(){
+fetch("/admin-data")
+.then(res=>res.json())
+.then(data=>{
+
+let container = document.getElementById("courseList");
+container.innerHTML="";
+
+data.forEach(c=>{
+
+container.innerHTML += `
+<div class="card">
+<h3>${c.name}</h3>
+<p>${c.desc}</p>
+
+<button class="btn-blue" onclick="openCourse('${c.course_id}')">
+Manage
+</button>
+
+<button class="btn-red" onclick="deleteCourse('${c.course_id}')">
+Delete
+</button>
+</div>
+`;
+
+});
+});
+}
+
+/* ================= COURSE MODAL ================= */
+function openCourse(id){
+
+currentCourse = id;
+
+fetch("/admin-course-data/"+id)
+.then(res=>res.json())
+.then(data=>{
+
+document.getElementById("courseTitle").innerText = data.course.name;
+
+window.courseData = data;
+
+showTab("classes");
+
+document.getElementById("courseModal").style.display="block";
+
+});
+}
+
+function closeModal(){
+document.getElementById("courseModal").style.display="none";
+}
+
+/* ================= TABS ================= */
+function showTab(tab){
+
+let data = window.courseData;
+let html = "";
+
+if(tab==="classes"){
+
+html += `<h3>Classes</h3>
+
+<input id="sub" placeholder="Subject">
+<input type="date" id="date">
+<input type="time" id="time">
+<button class="btn-blue" onclick="addClass()">Add</button><br><br>
+`;
+
+data.classes.forEach(c=>{
+html += `
+<div class="card">
+<input value="${c.subject}" id="s${c.class_id}">
+<input type="date" value="${c.date}" id="d${c.class_id}">
+<input type="time" value="${c.time}" id="t${c.class_id}">
+<input value="${c.link||""}" id="l${c.class_id}" placeholder="Link">
+
+<button onclick="updateClass('${c.class_id}')">Update</button>
+<button class="btn-red" onclick="deleteClass('${c.class_id}')">Delete</button>
+</div>
+`;
+});
+}
+
+/* NOTES */
+if(tab==="notes"){
+
+html += `<h3>Notes</h3>
+
+<input id="ntitle">
+<input type="file" id="nfile">
+<button onclick="uploadNote()">Upload</button><br><br>
+`;
+
+data.notes.forEach(n=>{
+html += `
+<div class="card">
+<a href="${n.file_url}" target="_blank">${n.title}</a>
+<br>
+<input value="${n.title}" id="n${n.note_id}">
+<button onclick="updateNote('${n.note_id}')">Edit</button>
+<button class="btn-red" onclick="deleteNote('${n.note_id}')">Delete</button>
+</div>
+`;
+});
+}
+
+/* TESTS */
+if(tab==="tests"){
+
+html += `<h3>Tests</h3>
+
+<button class="btn-blue" onclick="createTest()">Create Test</button><br><br>
+`;
+
+data.tests.forEach(t=>{
+html += `
+<div class="card">
+<h4>${t.name}</h4>
+<p>${t.duration} mins</p>
+<button onclick="viewResults('${t.test_id}')">Results</button>
+<button class="btn-red" onclick="deleteTest('${t.test_id}')">Delete</button>
+</div>
+`;
+});
+}
+
+document.getElementById("tabContent").innerHTML = html;
+}
+
+/* ================= APIs ================= */
+
+function addCourse(){
+
+fetch("/add-course",{
+method:"POST",
+headers:{
+    "Content-Type":"application/json"
+},
+body:JSON.stringify({
+    name: document.getElementById("cname").value,
+    desc: document.getElementById("cdesc").value,
+    category: document.getElementById("ccat").value
+})
+})
+.then(res => res.json())
+.then(data => {
+    console.log(data);
+    if(data.error){
+        alert("❌ " + data.error);
+    }else{
+        alert("✅ Course Added");
+        loadCourses();
+    }
+});
+}
+
+function deleteCourse(id){
+fetch("/delete-course/"+id,{method:"DELETE"})
+.then(()=>loadCourses());
+}
+
+/* CLASS */
+function addClass(){
+fetch("/add-class",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+course_id: currentCourse,
+subject: document.getElementById("sub").value,
+date: document.getElementById("date").value,
+time: document.getElementById("time").value
+})
+}).then(()=>openCourse(currentCourse));
+}
+
+function updateClass(id){
+fetch("/update-class-admin",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+class_id:id,
+subject:document.getElementById("s"+id).value,
+date:document.getElementById("d"+id).value,
+time:document.getElementById("t"+id).value,
+link:document.getElementById("l"+id).value
+})
+}).then(()=>openCourse(currentCourse));
+}
+
+function deleteClass(id){
+fetch("/delete-class/"+id,{method:"DELETE"})
+.then(()=>openCourse(currentCourse));
+}
+
+/* NOTES */
+function uploadNote(){
+let fd=new FormData();
+fd.append("title",ntitle.value);
+fd.append("file",nfile.files[0]);
+fd.append("course_id",currentCourse);
+
+fetch("/upload-note",{method:"POST",body:fd})
+.then(()=>openCourse(currentCourse));
+}
+
+function updateNote(id){
+let fd=new FormData();
+fd.append("note_id",id);
+fd.append("title",document.getElementById("n"+id).value);
+
+fetch("/update-note",{method:"POST",body:fd})
+.then(()=>openCourse(currentCourse));
+}
+
+function deleteNote(id){
+fetch("/delete-note/"+id,{method:"DELETE"})
+.then(()=>openCourse(currentCourse));
+}
+
+/* INIT */
+loadCourses();
+
+</script>
+
+</body>
+</html>

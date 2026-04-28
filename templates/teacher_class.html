@@ -1,0 +1,653 @@
+{% if not invalid %}
+
+<div class="class-wrapper">
+
+    <div class="class-grid">
+
+        <!-- LEFT -->
+        <div class="left-panel">
+
+            <div class="canvas-area">
+               <canvas id="myCanvas"></canvas>
+
+<style>
+  #myCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background-color: aliceblue;
+  }
+</style>
+                
+
+                
+
+            </div>
+
+            <!-- CONTROLS -->
+            <div class="controls" id="controlsBar">
+
+                <!-- BACK -->
+                <button class="back-btn" onclick="goBack()">⬅ Back</button>
+
+                <!-- INFO -->
+                <div class="overlay-info">
+                    <h1>{{ cls.subject }}</h1>
+                    <p>{{ teacher_name }} | {{ cls.date }} | {{ cls.time }}</p>
+                </div>
+            </div>
+
+                <button class="ctrl-btn" onclick="clearCanvas()">🧽 Clear</button>
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="right-panel">
+
+            <div class="teacher-video">
+                <video id="teacherVideo" autoplay playsinline ></video>
+            </div>
+
+            <div class="chat-box">
+                <h4>Live Chat</h4>
+                <div class="messages" id="chatMessages"></div>
+            </div>
+
+            <div class="chat-input">
+                <input type="text" placeholder="Send message...">
+                <button>Send</button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% else %}
+
+<div class="invalid-screen">
+    ❌ Invalid Class <br>
+</div>
+
+{% endif %}
+
+<style>
+    /* =========================
+   🌍 GLOBAL
+========================= */
+body{
+    margin:0;
+    font-family:sans-serif;
+    background:#0f172a;
+    color:white;
+}
+
+/* =========================
+   ❌ INVALID SCREEN
+========================= */
+.invalid-screen{
+    height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+    text-align:center;
+}
+
+/* =========================
+   📦 MAIN LAYOUT
+========================= */
+.class-wrapper{
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+}
+
+.class-grid{
+    flex:1;
+    display:grid;
+    grid-template-columns:3fr 1fr;
+    gap:10px;
+    padding:10px;
+}
+
+/* =========================
+   🎥 LEFT PANEL
+========================= */
+.left-panel{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.canvas-area{
+    flex:1;
+    position:relative;
+    background:black;
+    border-radius:12px;
+    overflow:hidden;
+}
+
+/* VIDEO */
+video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+/* =========================
+   🎯 OVERLAY
+========================= */
+.overlay-info{
+    position:absolute;
+    bottom:30px;
+    left:30px;
+    opacity:0;
+    transition:0.3s;
+}
+
+.back-btn{
+    position:absolute;
+    top:20px;
+    left:20px;
+    padding:8px 12px;
+    background:rgba(0,0,0,0.7);
+    border:none;
+    color:white;
+    border-radius:6px;
+    cursor:pointer;
+    opacity:0;
+    transition:0.3s;
+}
+
+/* SHOW ON HOVER */
+.canvas-area:hover .overlay-info{
+    opacity:1;
+}
+
+.canvas-area:hover .back-btn{
+    opacity:1;
+}
+
+/* =========================
+   🎮 CONTROLS BAR
+========================= */
+.controls{
+    height:60px;
+    background:#020617;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    border-radius:10px;
+}
+
+.ctrl-btn{
+    padding:8px 12px;
+    background:#1e293b;
+    border:none;
+    color:white;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+/* =========================
+   👉 RIGHT PANEL
+========================= */
+.right-panel{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    height:100%;
+    overflow:hidden; /* 🔥 prevents expansion */
+}
+
+/* TEACHER STATUS BOX */
+.teacher-video{
+    height:200px;
+    background:black;
+    border-radius:10px;
+    overflow:hidden;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+/* =========================
+   💬 CHAT BOX
+========================= */
+.chat-box{
+    background:#020617;
+    padding:10px;
+    border-radius:10px;
+
+    flex:1;
+    display:flex;
+    flex-direction:column;
+
+    min-height:0;     /* 🔥 CRITICAL FIX */
+    overflow:hidden;
+}
+
+/* SCROLL AREA */
+.messages{
+    flex:1;
+    overflow-y:auto;
+
+    min-height:0; /* 🔥 important */
+    scrollbar-width:none;
+}
+
+.messages::-webkit-scrollbar{
+    display:none;
+}
+
+/* MESSAGE */
+.message{
+    margin-bottom:10px;
+    padding:8px;
+    border-radius:8px;
+    background:#1e293b;
+}
+
+/* TEACHER MESSAGE */
+.message.teacher{
+    background:#1d4ed8;
+}
+
+/* META TEXT */
+.message .meta{
+    font-size:12px;
+    opacity:0.7;
+    margin-bottom:4px;
+}
+
+/* MESSAGE TEXT */
+.message .text{
+    font-size:14px;
+}
+
+/* =========================
+   ✉️ INPUT
+========================= */
+.chat-input{
+    display:flex;
+    gap:5px;
+}
+
+.chat-input input{
+    flex:1;
+    padding:6px;
+    border:none;
+    border-radius:6px;
+}
+
+.chat-input button{
+    padding:6px 10px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+/* =========================
+   📱 RESPONSIVE
+========================= */
+@media(max-width:900px){
+    .class-grid{
+        grid-template-columns:1fr;
+    }
+
+    .teacher-video{
+        height:150px;
+    }
+}
+</style>
+<script>
+    function toggleDarkMode(){
+    document.body.classList.toggle("dark");
+    localStorage.setItem("theme",
+        document.body.classList.contains("dark")?"dark":"light"
+    );
+}
+
+window.onload=function(){
+
+    if(localStorage.getItem("theme")==="dark"){
+        document.body.classList.add("dark");
+    }
+
+    if(window.innerWidth <= 1024){
+        document.getElementById("planner").checked=true;
+    }
+    
+}
+</script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<script>
+const socket = io("https://FarhamEdu-dbqo.onrender.com", {
+    transports: ["websocket"]
+});
+
+const classId = "{{ cls.class_id }}";
+const video = document.getElementById("teacherVideo");
+
+const chatBox = document.getElementById("chatMessages");
+const input = document.querySelector(".chat-input input");
+const sendBtn = document.querySelector(".chat-input button");
+
+let localStream;
+let peerConnections = {};
+
+const config = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    {
+      urls: "turn:openrelay.metered.ca:80",
+      username: "openrelayproject",
+      credential: "openrelayproject"
+    }
+  ]
+};
+
+/* =========================
+   🎥 START CAMERA
+========================= */
+window.addEventListener("load", async () => {
+    try{
+        localStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+        });
+
+        video.srcObject = localStream;
+
+    }catch(err){
+        console.error(err);
+    }
+
+    loadComments();
+});
+
+/* =========================
+   🚀 JOIN ROOM
+========================= */
+socket.emit("join-room", { class_id: classId });
+
+/* =========================
+   👤 STUDENT JOIN
+========================= */
+socket.on("user-joined", async (data) => {
+
+    const studentId = data.user_id;
+
+    const pc = new RTCPeerConnection(config);
+    peerConnections[studentId] = pc;
+
+    localStream.getTracks().forEach(track => {
+        pc.addTrack(track, localStream);
+    });
+
+    pc.onicecandidate = e => {
+        if(e.candidate){
+            socket.emit("ice-candidate", {
+                candidate: e.candidate,
+                to: studentId,
+                class_id: classId
+            });
+        }
+    };
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    socket.emit("offer", {
+        offer: offer,
+        to: studentId,
+        class_id: classId
+    });
+});
+
+/* =========================
+   📩 ANSWER
+========================= */
+socket.on("answer", async data => {
+    const pc = peerConnections[data.from];
+    if(pc){
+        await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+    }
+});
+
+/* =========================
+   🧊 ICE
+========================= */
+socket.on("ice-candidate", async data => {
+    const pc = peerConnections[data.from];
+    if(pc && data.candidate){
+        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+    }
+});
+
+/* =========================
+   💬 CHAT
+========================= */
+const displayedJoins = new Set();
+
+
+
+
+async function loadComments(){
+    const res = await fetch(`/get-comments/${classId}`);
+    const data = await res.json();
+
+    chatBox.innerHTML = "";
+
+    data.forEach(c => {
+        const div = document.createElement("div");
+
+        if(c.type === "join"){
+            if(!displayedJoins.has(c.id)){
+                displayedJoins.add(c.id);
+
+                div.classList.add("message");
+                div.style.background = "#334155";
+                div.style.textAlign = "center";
+
+                div.innerHTML = `
+                    <div class="meta">${c.time}</div>
+                    <div class="text">👋 ${c.text}</div>
+                `;
+
+                chatBox.appendChild(div);
+            }
+            return;
+        }
+
+        div.classList.add("message");
+
+        if(c.role === "Teacher"){
+            div.classList.add("teacher");
+        }
+
+        div.innerHTML = `
+            <div class="meta">${c.name} • ${c.time}</div>
+            <div class="text">${c.text}</div>
+        `;
+
+        chatBox.appendChild(div);
+    });
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function sendComment(){
+    const text = input.value.trim();
+    if(!text) return;
+
+    await fetch("/add-comment", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+            class_id: classId,
+            text: text
+        })
+    });
+
+    input.value = "";
+    loadComments();
+}
+
+sendBtn.onclick = sendComment;
+input.addEventListener("keypress", e=>{
+    if(e.key === "Enter") sendComment();
+});
+
+setInterval(loadComments, 2000);
+
+/* =========================
+   🔙 BACK
+========================= */
+function goBack(){
+    window.location.href = "/LPteachershome";
+}
+
+
+
+/* =========================
+   ♻️ LOAD OLD CANVAS (IMPORTANT)
+========================= */
+socket.on("load-canvas", (data) => {
+
+    // Clear first
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.beginPath();
+
+    data.forEach(item => {
+
+        if (item.type === "start") {
+            ctx.beginPath();
+            ctx.moveTo(item.x, item.y);
+        }
+
+        else if (item.type === "draw") {
+            ctx.lineTo(item.x, item.y);
+            ctx.stroke();
+        }
+
+        else if (item.type === "end") {
+            ctx.beginPath();
+        }
+
+    });
+
+});
+
+/* =========================
+   🎨 CANVAS (FINAL FIXED)
+========================= */
+const canvas = document.getElementById("myCanvas");
+const ctx = canvas.getContext("2d");
+
+let drawing = false;
+let lastEmit = 0;
+
+/* SIZE FIX */
+function resizeCanvas() {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+/* POSITION */
+function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
+}
+
+/* START */
+canvas.addEventListener("mousedown", (e) => {
+    drawing = true;
+    const pos = getPos(e);
+
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+
+    socket.emit("draw-start", { ...pos, class_id: classId });
+});
+
+/* MOVE (THROTTLED) */
+canvas.addEventListener("mousemove", (e) => {
+    if (!drawing) return;
+
+    const now = Date.now();
+    if (now - lastEmit < 15) return;
+    lastEmit = now;
+
+    const pos = getPos(e);
+
+    draw(pos.x, pos.y);
+
+    socket.emit("draw", { ...pos, class_id: classId });
+});
+
+/* END */
+canvas.addEventListener("mouseup", () => {
+    drawing = false;
+    ctx.beginPath();
+    socket.emit("draw-end", { class_id: classId });
+});
+
+canvas.addEventListener("mouseleave", () => {
+    drawing = false;
+    ctx.beginPath();
+});
+
+/* DRAW FUNCTION */
+function draw(x, y) {
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "black";
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+}
+
+/* =========================
+   📡 RECEIVE (CRITICAL)
+========================= */
+socket.on("draw-start", (data) => {
+    ctx.beginPath();
+    ctx.moveTo(data.x, data.y);
+});
+
+socket.on("draw", (data) => {
+    draw(data.x, data.y);
+});
+
+socket.on("draw-end", () => {
+    ctx.beginPath();
+});
+
+/* =========================
+   🧽 CLEAR
+========================= */
+function clearCanvas(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    socket.emit("clear-canvas", {
+        class_id: classId
+    });
+}
+
+socket.on("clear-canvas", () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+});
+</script>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ course.name }}</title>
+
+    <style>
+        body{
+            font-family:Poppins;
+            background:#f8fafc;
+            padding:30px;
+        }
+
+        .card{
+            max-width:800px;
+            margin:auto;
+            background:white;
+            padding:25px;
+            border-radius:16px;
+            box-shadow:0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1{color:#2563eb;}
+        p{color:#64748b;}
+
+        .section-title{
+            margin-top:30px;
+            font-size:20px;
+            color:#111827;
+            font-weight:600;
+        }
+
+        .class-box{
+            margin-top:10px;
+            padding:15px;
+            border-radius:10px;
+            background:#f1f5f9;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+
+        .class-info{
+            display:flex;
+            flex-direction:column;
+        }
+
+        .time{
+            font-weight:600;
+            color:#2563eb;
+        }
+
+        .join-btn{
+            background:#2563eb;
+            color:white;
+            padding:8px 14px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+        }
+
+        .join-btn:hover{
+            background:#1d4ed8;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <h1>{{ course.name }}</h1>
+    <p>{{ course.desc }}</p>
+
+    <p><strong>Category:</strong> {{ course.category }}</p>
+    <p><strong>Total Classes:</strong> {{ course.total_classes }}</p>
+
+    <!-- 🔥 CLASSES SECTION -->
+    <div class="section-title">📅 Classes</div>
+
+    {% if grouped_classes %}
+        
+        {% for date, classes in grouped_classes.items() %}
+            
+            <h3 style="margin-top:20px; color:#0f172a;">
+                {{ date }}
+            </h3>
+
+           {% for c in classes %}
+<div class="class-box">
+
+    <div class="class-info">
+        <span class="time">{{ c.time }}</span>
+        <span>{{ c.subject }}</span>
+    </div>
+
+    <!-- 🔥 BUTTON LOGIC -->
+    {% if c.has_link or c.is_past %}
+        <!-- 🎥 Recording -->
+        <a href="/recording/{{ c.class_id }}">
+            <button class="join-btn">▶ Watch</button>
+        </a>
+
+    {% elif c.is_today %}
+        <!-- 🔴 Live class -->
+        <a href="/student_class/{{ c.class_id }}">
+            <button class="join-btn">🔴 Join</button>
+        </a>
+
+    {% else %}
+        <!-- ⏳ Future -->
+        <span style="color:#94a3b8;">Upcoming</span>
+    {% endif %}
+
+</div>
+{% endfor %}
+
+        {% endfor %}
+
+    {% else %}
+        <p>No classes available</p>
+    {% endif %}
+
+    <br>
+    <a href="/LPstudenthome">⬅ Back</a>
+
+</div>
+
+</body>
+</html>

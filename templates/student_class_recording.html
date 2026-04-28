@@ -1,0 +1,530 @@
+{% if link %}
+
+<div class="class-wrapper">
+
+    <div class="class-grid">
+
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+
+            <div class="canvas-area">
+
+                <!-- VIDEO -->
+                <video id="recordingVideo" autoplay muted playsinline>
+                    <source src="{{ link }}">
+                </video>
+
+                <!-- BACK BUTTON -->
+                <button class="back-btn" onclick="goBack()">⬅ Back</button>
+
+                <!-- OVERLAY -->
+                <div class="overlay-info">
+                    <h1>📼 Class Recording - {{ subject }}</h1>
+                    <p>Watch your saved session</p>
+                </div>
+
+                <!-- CONTROLS -->
+                <div class="video-controls" id="videoControls">
+
+                    <button onclick="togglePlay()">▶️/⏸</button>
+
+                    <button onclick="volumeDown()">🔉</button>
+                    <button onclick="volumeUp()">🔊</button>
+
+                    <button onclick="enableSound()" id="unmuteBtn">🔊 Enable Sound</button>
+
+                    <select onchange="changeSpeed(this.value)">
+                        <option value="0.75">0.75x</option>
+                        <option value="1" selected>1x</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2x</option>
+                    </select>
+
+                    <input type="range" id="seekBar" value="0" min="0" step="0.1">
+
+                    <span id="timeDisplay">0:00 / 0:00</span>
+
+                    <button onclick="toggleFullScreen()">⛶</button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+            <div class="chat-box">
+                <h4>Live Chat</h4>
+               <div class="messages" id="chatMessages"></div>
+               
+            </div>
+                <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="Ask doubt...">
+    <button onclick="sendMessage()">Send</button>
+</div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% else %}
+
+<div class="invalid-screen">
+    ❌ No recording available
+</div>
+
+{% endif %}
+
+<style>
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: sans-serif;
+    background: #0f172a;
+    color: white;
+}
+
+/* MAIN WRAPPER */
+.class-wrapper {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* GRID */
+.class-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    gap: 10px;
+    padding: 10px;
+    min-height: 0; /* ✅ IMPORTANT */
+}
+
+/* LEFT PANEL */
+.left-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+/* VIDEO AREA */
+.canvas-area {
+    flex: 1;
+    position: relative;
+    background: black;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.canvas-area video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* BACK BUTTON */
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.7);
+    border: none;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.canvas-area:hover .back-btn {
+    opacity: 1;
+}
+
+/* OVERLAY */
+.overlay-info {
+    position: absolute;
+    bottom: 80px;
+    left: 20px;
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.canvas-area:hover .overlay-info {
+    opacity: 1;
+}
+
+/* VIDEO CONTROLS */
+.video-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.canvas-area:hover .video-controls {
+    opacity: 1;
+}
+
+.video-controls button,
+.video-controls select {
+    background: #1e293b;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#seekBar {
+    flex: 1;
+}
+
+#timeDisplay {
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* RIGHT PANEL */
+.right-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;        /* ✅ FIX */
+    min-height: 0;
+    overflow: hidden;
+    gap: 10px;
+}
+
+/* CHAT BOX */
+.chat-box {
+    background: #020617;
+    padding: 10px;
+    border-radius: 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* MESSAGES (SCROLL FIX HERE) */
+.messages {
+    flex: 1;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
+    padding-right: 4px;
+
+    scroll-behavior: smooth;
+
+    scrollbar-width: thin;
+    scrollbar-color: #334155 #020617;
+}
+
+/* SCROLLBAR (CHROME) */
+.messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messages::-webkit-scrollbar-track {
+    background: #020617;
+    border-radius: 10px;
+}
+
+.messages::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.messages::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* MESSAGE */
+.message {
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 8px;
+    background: #1e293b;
+}
+
+/* CHAT INPUT */
+.chat-input {
+    display: flex;
+    gap: 6px;
+    border-top: 1px solid #1e293b;
+    padding-top: 8px;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+}
+
+.chat-input button {
+    padding: 8px 12px;
+    border: none;
+    background: #1e293b;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* INVALID SCREEN */
+.invalid-screen {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.teacher-video {
+    height: 150px;
+    background: black;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0; /* 🔥 prevents shrinking */
+}
+
+
+</style>
+
+
+<script>
+const CLASS_ID = "{{ cls.class_id }}";
+</script>
+<script>
+    function sendMessage() {
+    const input = document.getElementById("chatInput");
+    const text = input.value.trim();
+
+    if (!text) return;
+
+    fetch('/add-comment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            class_id: CLASS_ID,
+            text: text
+        })
+    })
+    .then(res => res.json())
+    .then(() => {
+        input.value = "";
+        loadMessages(); // refresh chat
+    });
+}
+function loadMessages() {
+    fetch(`/get-comments/${CLASS_ID}`)
+        .then(res => res.json())
+        .then(data => {
+
+            const box = document.getElementById("chatMessages");
+
+            // prevent scroll jump
+            const isAtBottom =
+                box.scrollHeight - box.scrollTop <= box.clientHeight + 50;
+
+            box.innerHTML = "";
+
+            data.forEach(msg => {
+                const div = document.createElement("div");
+                div.classList.add("message");
+
+                if (msg.type === "join") {
+                    div.innerHTML = `<i>${msg.text}</i>`;
+                } else {
+                    div.innerHTML = `
+                        <b>${msg.name}</b>: ${msg.text}
+                        <div style="font-size:11px;opacity:0.6;">${msg.time}</div>
+                    `;
+                }
+
+                box.appendChild(div);
+            });
+
+            if (isAtBottom) {
+                box.scrollTop = box.scrollHeight;
+            }
+        });
+}
+setInterval(loadMessages, 2000); // every 2 sec
+window.onload = () => {
+    loadMessages();
+};
+</script>
+<script>
+const video = document.getElementById("recordingVideo");
+const seekBar = document.getElementById("seekBar");
+const timeDisplay = document.getElementById("timeDisplay");
+
+/* ✅ AUTOPLAY (MUST BE MUTED) */
+window.addEventListener("load", async () => {
+    try {
+        video.muted = true;
+        await video.play();
+    } catch (err) {
+        console.log("Autoplay blocked:", err);
+    }
+});
+
+/* PLAY / PAUSE */
+function togglePlay(){
+    video.paused ? video.play() : video.pause();
+}
+
+/* VOLUME */
+function volumeUp(){
+    video.volume = Math.min(1, video.volume + 0.1);
+}
+
+function volumeDown(){
+    video.volume = Math.max(0, video.volume - 0.1);
+}
+
+/* SPEED */
+function changeSpeed(speed){
+    video.playbackRate = parseFloat(speed);
+}
+
+/* FORMAT TIME */
+function formatTime(t){
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60).toString().padStart(2,'0');
+    return `${m}:${s}`;
+}
+
+/* FULLSCREEN */
+function toggleFullScreen(){
+    const container = document.querySelector(".canvas-area");
+
+    if (!document.fullscreenElement) {
+        container.requestFullscreen().catch(console.log);
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+/* SEEK */
+video.addEventListener("timeupdate", () => {
+    seekBar.max = video.duration || 0;
+    seekBar.value = video.currentTime;
+
+    timeDisplay.textContent =
+        `${formatTime(video.currentTime)} / ${formatTime(video.duration || 0)}`;
+});
+
+seekBar.addEventListener("input", () => {
+    video.currentTime = seekBar.value;
+});
+
+/* BACK */
+function goBack(){
+    window.location.href = "/LPstudenthome";
+}
+
+/* =========================
+   SOUND UNLOCK
+   ========================= */
+function enableSound(){
+    video.muted = false;
+    video.volume = 1;
+    video.play().catch(()=>{});
+    document.getElementById("unmuteBtn").style.display = "none";
+}
+
+function unlockAudioOnce() {
+    video.muted = false;
+    video.volume = 1;
+    video.play().catch(()=>{});
+    document.removeEventListener("click", unlockAudioOnce);
+    document.getElementById("unmuteBtn").style.display = "none";
+}
+
+document.addEventListener("click", unlockAudioOnce);
+
+/* KEYBOARD CONTROLS */
+document.addEventListener("keydown", (e) => {
+    const active = document.activeElement;
+    const tag = active.tagName.toLowerCase();
+    const isTyping = tag === "input" || tag === "textarea" || tag === "select" || active.isContentEditable;
+
+  
+    
+    if (isTyping) return; // ← exit BEFORE preventDefault and switch
+
+    if (e.key === " " || e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+
+    switch (e.key) {
+        case " ":            togglePlay();               break;
+        case "m": case "M": enableSound();              break;
+        case "ArrowRight":  video.currentTime += 10;   break;
+        case "ArrowLeft":   video.currentTime -= 10;   break;
+        case "ArrowUp":     volumeUp();                 break;
+        case "ArrowDown":   volumeDown();               break;
+        case "f": case "F": toggleFullScreen();         break;
+    }
+});
+
+  document.getElementById("chatInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+/* =========================
+   ✅ WATCHTIME TRACKING (5s)
+   ========================= */
+
+let lastTime = 0;
+
+video.addEventListener("play", () => {
+    lastTime = video.currentTime;
+});
+
+setInterval(() => {
+    if (!video.paused && !video.ended) {
+        const current = video.currentTime;
+        const watched = current - lastTime;
+
+        if (watched > 0) {
+            lastTime = current;
+
+            fetch('/update-watchtime', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    class_id: CLASS_ID,   // ✅ FIXED - was missing
+                    seconds: watched
+                })
+            }).catch(err => console.log("Watchtime error:", err));
+        }
+    }
+}, 5000);
+
+// ✅ FIXED - reset lastTime on fullscreen toggle to avoid drift
+document.addEventListener("fullscreenchange", () => {
+    lastTime = video.currentTime;
+});
+</script>

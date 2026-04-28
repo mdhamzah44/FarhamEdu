@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ test.name }}</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+*{
+    transition: all 0.15s ease-in-out;
+}
+body{
+    font-family: 'Inter', 'Poppins', sans-serif;
+    margin:0;
+    background:#0f172a;
+    color:#e2e8f0;
+}
+
+/* HEADER */
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px 30px;
+    background:#020617;
+    border-bottom:1px solid #1e293b;
+    position:sticky;
+    top:0;
+    z-index:10;
+}
+
+.logo{
+    font-weight:600;
+    color:#22c55e;
+    font-size:20px;
+}
+
+/* LAYOUT */
+.container{
+    display:flex;
+}
+
+/* LEFT PANEL */
+.left{
+    width:70%;
+    padding:30px;
+}
+
+/* QUESTION CARD */
+.question-box{
+    background:#020617;
+    padding:25px;
+    border-radius:14px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4);
+    border:1px solid #1e293b;
+}
+
+.question-box h3{
+    margin-bottom:10px;
+}
+
+/* OPTIONS */
+.options{
+    margin-top:20px;
+}
+
+.option{
+    padding:14px;
+    border:1px solid #334155;
+    border-radius:10px;
+    margin-bottom:12px;
+    cursor:pointer;
+    transition:0.2s;
+    background:#020617;
+}
+
+.option:hover{
+    background:#1e293b;
+    border-color:#22c55e;
+}
+
+/* RIGHT PANEL */
+.right{
+    width:30%;
+    background:#020617;
+    border-left:1px solid #1e293b;
+    padding:20px;
+}
+
+/* TIMER */
+.timer{
+    text-align:center;
+    font-weight:600;
+    margin-bottom:20px;
+    font-size:18px;
+    color:#22c55e;
+}
+
+/* GRID */
+.grid{
+    display:grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap:10px;
+}
+
+.qbox{
+    padding:10px;
+    border:1px solid #334155;
+    text-align:center;
+    border-radius:8px;
+    cursor:pointer;
+    background:#020617;
+    transition:0.2s;
+    font-size:14px;
+}
+
+.qbox:hover{
+    background:#1e293b;
+}
+
+.qbox.active{
+    border:2px solid #22c55e;
+}
+
+/* SUBJECT BOX */
+.subject-box{
+    transition:0.2s;
+}
+
+/* BUTTONS */
+.footer{
+    margin-top:25px;
+    display:flex;
+    justify-content:space-between;
+}
+
+.btn{
+    padding:10px 20px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:500;
+    transition:0.2s;
+}
+
+/* BUTTON TYPES */
+.prev{
+    background:#1e293b;
+    color:#cbd5f5;
+}
+
+.prev:hover{
+    background:#334155;
+}
+
+.next{
+    background:#22c55e;
+    color:white;
+}
+
+.next:hover{
+    background:#16a34a;
+}
+
+.btn[style*="ef4444"]{
+    background:#ef4444 !important;
+}
+
+.btn[style*="ef4444"]:hover{
+    background:#dc2626 !important;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{
+    width:6px;
+}
+::-webkit-scrollbar-thumb{
+    background:#334155;
+    border-radius:10px;
+}
+
+/* RESULT COLORS */
+.correct{
+    background:#064e3b !important;
+}
+
+.wrong{
+    background:#7f1d1d !important;
+}
+
+/* SMALL TEXT */
+small{
+    color:#94a3b8;
+}
+.qbox.answered{
+    background:#22c55e !important;
+    color:white !important;
+    border-color:#22c55e;
+}
+
+.qbox.unanswered{
+    background:#020617;
+    color:#cbd5f5;
+}
+.qbox.answered:hover{
+    background:#16a34a !important;
+}
+</style>
+
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">KhanSirEdu</div>
+    <div>{{ test.name }}</div>
+    <div id="timer">--:--:--</div>
+</div>
+
+<div class="container">
+
+    <!-- LEFT -->
+    <div class="left">
+
+        <div class="question-box">
+            <h3>Question <span id="qno">1</span></h3>
+            <p id="questionText"></p>
+
+            <div class="options" id="options"></div>
+        </div>
+
+        <div class="footer">
+            <button class="btn prev" onclick="prevQ()">Previous</button>
+            <button class="btn next" onclick="nextQ()">Save & Next</button>
+            <button class="btn" style="background:#ef4444;color:white;" onclick="submitTest()">
+Finish Test
+</button>
+        </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right">
+
+    <div class="timer" id="timeBox"></div>
+
+    <div id="subjectContainer"></div>
+
+</div>
+</div>
+<div id="scholarshipModal" style="
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    background:rgba(0,0,0,0.7);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+">
+    <div style="
+        background:#020617;
+        padding:30px;
+        border-radius:12px;
+        width:340px;
+        text-align:center;
+        border:1px solid #22c55e;
+        box-shadow:0 0 20px rgba(34,197,94,0.4);
+        color:white;
+        font-family:sans-serif;
+    ">
+        <h2 style="color:#22c55e;">🎉 Congratulations!</h2>
+
+        <p id="mainText" style="margin:15px 0; line-height:1.5;">
+            You have been awarded a <b>50% Scholarship</b> on 
+            <b>Khan Sir Course</b>.
+            <br><br>
+            Original Price: <b>₹10000</b><br>
+            Discounted Price: <b>₹5000</b>
+            <br><br>
+            Your Exclusive Coupon Code: 
+            <b id="coupon"></b>
+            <br><br>
+            <b>Important:</b> You must complete your payment before 
+            <b>10th July</b> to avail this offer.
+            <br><br>
+            You can also choose to pay in <b>easy installments until July</b>.
+        </p>
+
+        <button onclick="translateText()" style="
+            margin-bottom:10px;
+            padding:8px 15px;
+            border:none;
+            border-radius:8px;
+            background:#3b82f6;
+            color:white;
+            cursor:pointer;
+        ">
+            🌐 Translate
+        </button>
+
+        <br>
+
+        <button onclick="closeScholarshipModal()" style="
+            padding:10px 20px;
+            border:none;
+            border-radius:8px;
+            background:#22c55e;
+            color:white;
+            cursor:pointer;
+        ">
+            Close
+        </button>
+    </div>
+</div>
+
+<script>
+    // Generate random coupon
+    function generateCoupon() {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let coupon = "KHAN50-";
+        for (let i = 0; i < 5; i++) {
+            coupon += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return coupon;
+    }
+
+    document.getElementById("coupon").innerText = generateCoupon();
+
+    function closeScholarshipModal() {
+        document.getElementById("scholarshipModal").style.display = "none";
+    }
+
+    // Simple translation (English → Hindi)
+    let translated = false;
+
+    function translateText() {
+        const text = document.getElementById("mainText");
+
+        if (!translated) {
+            text.innerHTML = `
+                आपको <b>खान सर कोर्स</b> पर <b>50% स्कॉलरशिप</b> प्रदान की गई है।
+                <br><br>
+                मूल कीमत: <b>₹10000</b><br>
+                रियायती कीमत: <b>₹5000</b>
+                <br><br>
+                आपका कूपन कोड: <b>${document.getElementById("coupon").innerText}</b>
+                <br><br>
+                <b>महत्वपूर्ण:</b> इस ऑफर का लाभ लेने के लिए आपको 
+                <b>10 जुलाई</b> तक भुगतान करना होगा।
+                <br><br>
+                आप <b>जुलाई तक आसान किस्तों में भुगतान</b> भी कर सकते हैं।
+            `;
+            translated = true;
+        } else {
+            location.reload(); // reset to original
+        }
+    }
+</script>
+<script>
+
+const questions = {{ test.questions | tojson }};
+const testId = "{{ test.test_id }}";
+
+// ✅ detect subject-based test
+const isSubjectWise = questions.length > 0 && questions[0].subject;
+
+let subjectMap = {};
+let orderedQuestions = [];
+
+// ✅ build subject-wise order
+
+function buildSubjectUI(){
+
+    let container = document.getElementById("subjectContainer");
+
+    // normal test fallback
+    if(!isSubjectWise){
+        let html = `<h4>Questions</h4><div class="grid">`;
+
+        orderedQuestions.forEach((q,i)=>{
+            html += `<div class="qbox" onclick="goTo(${i})">${i+1}</div>`;
+        });
+
+        html += `</div>`;
+        container.innerHTML = html;
+        updateSubjectUI();
+        return;
+    }
+
+    let stats = {};
+    let html = "";
+
+    // group by subject
+    orderedQuestions.forEach((q,i)=>{
+
+        if(!stats[q.subject]){
+            stats[q.subject] = {
+                questions: []
+            };
+        }
+
+        stats[q.subject].questions.push({
+            index: i
+        });
+    });
+
+    // build UI
+    Object.keys(stats).forEach(subject=>{
+
+        let qs = stats[subject].questions;
+
+        html += `
+        <div style="margin-bottom:20px;">
+            <div style="
+                font-weight:600;
+                margin-bottom:8px;
+                display:flex;
+                justify-content:space-between;
+            ">
+                <span>${subject}</span>
+                <span id="count_${subject.replace(/\s/g,'')}">0/${qs.length}</span>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">
+        `;
+
+        qs.forEach(q=>{
+            html += `
+            <div class="qbox subject-box"
+                 data-index="${q.index}"
+                 onclick="goTo(${q.index})">
+                 ${q.index+1}
+            </div>`;
+        });
+
+        html += `</div></div>`;
+    });
+
+    container.innerHTML = html;
+
+    updateSubjectUI();
+}
+
+function updateSubjectUI(){
+
+    let boxes = document.querySelectorAll(".subject-box");
+
+    let subjectCounts = {};
+
+    boxes.forEach(box=>{
+
+        let i = parseInt(box.dataset.index);
+        let q = orderedQuestions[i];
+
+        let subjectKey = q.subject.replace(/\s/g,'');
+
+        if(!subjectCounts[subjectKey]){
+            subjectCounts[subjectKey] = {
+                attempted:0,
+                total:0
+            };
+        }
+
+        subjectCounts[subjectKey].total++;
+
+        // reset styles
+        box.classList.remove("active");
+
+        if(i === current){
+            box.classList.add("active");
+        }
+
+        // reset classes
+box.classList.remove("answered","unanswered","active");
+
+// active question
+if(i === current){
+    box.classList.add("active");
+}
+
+// answered / unanswered
+if(answers[i] !== undefined){
+    box.classList.add("answered");
+    subjectCounts[subjectKey].attempted++;
+} else {
+    box.classList.add("unanswered");
+}
+    });
+
+    // update counts
+    Object.keys(subjectCounts).forEach(key=>{
+        let el = document.getElementById("count_"+key);
+        if(el){
+            let s = subjectCounts[key];
+            el.innerText = `${s.attempted}/${s.total}`;
+        }
+    });
+}
+if(isSubjectWise){
+
+    questions.forEach((q, i)=>{
+        if(!subjectMap[q.subject]){
+            subjectMap[q.subject] = [];
+        }
+        subjectMap[q.subject].push({...q, originalIndex: i});
+    });
+
+    Object.keys(subjectMap).forEach(sub=>{
+        subjectMap[sub].forEach(q=>{
+            orderedQuestions.push(q);
+        });
+    });
+
+} else {
+    orderedQuestions = questions.map((q,i)=>({...q, originalIndex:i}));
+}
+
+let current = 0;
+let answers = {};
+let submitted = false;
+
+// ================= LOAD QUESTION =================
+function loadQuestion(index){
+
+    let q = orderedQuestions[index];
+
+    document.getElementById("qno").innerText = index+1;
+
+    let subjectHTML = "";
+
+    if(isSubjectWise){
+        subjectHTML = `<div style="font-size:14px;color:#2563eb;margin-bottom:5px;">
+            ${q.subject}${q.topic ? " • "+q.topic : ""}
+        </div>`;
+    }
+
+    document.getElementById("questionText").innerHTML =
+        subjectHTML + q.question;
+
+    let optHTML = "";
+
+    q.options.forEach((opt, i)=>{
+
+        let style = "";
+
+        if(answers[index] == i){
+            style = "background:#064e3b;border:2px solid #22c55e;box-shadow:0 0 10px #22c55e;";
+        }
+
+        optHTML += `<div class="option" style="${style}" onclick="selectOption(${i})">${opt}</div>`;
+    });
+
+    document.getElementById("options").innerHTML = optHTML;
+
+    updateSubjectUI();
+}
+
+// ================= SELECT OPTION =================
+function selectOption(i){
+
+    if(submitted) return;
+
+    if(answers[current] === i){
+        delete answers[current];
+    } else {
+        answers[current] = i;
+    }
+
+    saveCache();
+    loadQuestion(current);
+    updateSubjectUI();
+}
+
+// ================= SAVE CACHE =================
+function saveCache(){
+    if(submitted) return;
+
+    localStorage.setItem("test_"+testId, JSON.stringify(answers));
+    sessionStorage.setItem("test_"+testId, JSON.stringify(answers));
+}
+
+// auto save
+setInterval(()=>{ saveCache(); }, 5000);
+
+// ================= NAV =================
+function nextQ(){
+    if(current < orderedQuestions.length-1){
+        current++;
+        loadQuestion(current);
+    }
+}
+
+function prevQ(){
+    if(current > 0){
+        current--;
+        loadQuestion(current);
+    }
+}
+
+function goTo(i){
+    current = i;
+    loadQuestion(i);
+}
+
+// ================= TIMER =================
+let totalSeconds;
+
+
+function startTimer(){
+
+    let timer = setInterval(()=>{
+
+        if(totalSeconds <= 0){
+
+            clearInterval(timer);
+
+            localStorage.removeItem("timer_"+testId);
+
+            alert("⏰ Time's up! Auto submitting...");
+            submitTest(true);
+
+            return;
+        }
+
+        totalSeconds--;
+
+        // ✅ SAVE EVERY SECOND
+        localStorage.setItem("timer_"+testId, totalSeconds);
+
+        let h = Math.floor(totalSeconds/3600);
+        let m = Math.floor((totalSeconds%3600)/60);
+        let s = totalSeconds%60;
+
+        document.getElementById("timer").innerText =
+            `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+
+    },1000);
+}
+
+
+// ================= SUBMIT =================
+function submitTest(auto=false){
+
+    if(submitted) return;
+
+    if(!auto){
+        if(!confirm("Submit test?")) return;
+    }
+
+    let finalAnswers = {};
+
+    orderedQuestions.forEach((q,i)=>{
+        let originalIndex = q.originalIndex;
+
+        if(answers[i] === undefined){
+            finalAnswers[originalIndex] = -1;
+        } else {
+            finalAnswers[originalIndex] = answers[i];
+        }
+    });
+
+    fetch("/submit-test", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+            test_id: testId,
+            answers: finalAnswers
+        })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        submitted = true;
+
+        localStorage.removeItem("test_"+testId);
+        sessionStorage.removeItem("test_"+testId);
+        localStorage.removeItem("timer_"+testId);
+
+        showResult(data);
+    });
+}
+
+// ================= RESULT =================
+function showResult(data){
+
+    submitted = true;
+
+    document.getElementById("timer").style.display = "none";
+    document.getElementById("timeBox").style.display = "none";
+
+    localStorage.removeItem("test_"+testId);
+    sessionStorage.removeItem("test_"+testId);
+    localStorage.removeItem("timer_"+testId);
+
+    document.querySelector(".left").innerHTML = `
+        <div class="question-box">
+            <h2>Result</h2>
+            <h3>Score: ${data.score}</h3>
+            <p>Correct: ${data.correct}</p>
+            <p>Wrong: ${data.wrong}</p>
+
+            <a href="/LPstudenthome">
+                <button class="btn" style="background:#2563eb;color:white;margin-top:15px;">
+                    ⬅ Go to Home
+                </button>
+            </a>
+        </div>
+    `;
+
+    let reviewHTML = "";
+
+    orderedQuestions.forEach((q,i)=>{
+
+        let userAns = data.answers[q.originalIndex];
+        let correct = q.correct;
+
+        reviewHTML += `
+        <div class="question-box" style="margin-top:20px;">
+            <h4>
+                ${isSubjectWise ? q.subject + " • " : ""}
+                Q${i+1}: ${q.question}
+            </h4>
+        `;
+
+        if(userAns == -1 || userAns === undefined){
+            reviewHTML += `<p style="color:#0ea5e9;">Unanswered</p>`;
+        }
+
+        q.options.forEach((opt,idx)=>{
+
+            let style = "";
+if(idx == correct){
+    style = "background:#d1fae5; color:#065f46; font-weight:500;";
+}
+
+if(idx == userAns && idx != correct){
+    style = "background:#fee2e2; color:#7f1d1d; font-weight:500;";
+}
+
+            reviewHTML += `<div class="option" style="${style}">${opt}</div>`;
+        });
+
+        reviewHTML += "</div>";
+    });
+
+    document.querySelector(".left").innerHTML += reviewHTML;
+
+// ✅ STRICT CONDITION CHECK
+if (
+    testId === "2114cfab-7225-4787-8f2e-df79ef148d4d" &&
+    scholarshipUsers.includes(currentUserId)
+) {
+    setTimeout(() => {
+        showScholarshipModal();
+    }, 800);
+}
+    
+}
+
+
+
+// ================= INIT =================
+window.onload = function(){
+
+fetch("/get-result/"+testId)
+.then(res=>res.json())
+.then(data=>{
+
+    if(data.attempted){
+
+        localStorage.removeItem("test_"+testId);
+        sessionStorage.removeItem("test_"+testId);
+        showResult(data);
+
+    } else {
+
+        let saved = localStorage.getItem("test_"+testId)
+                  || sessionStorage.getItem("test_"+testId);
+
+        if(saved){
+            answers = JSON.parse(saved);
+        }
+
+        buildSubjectUI();
+        loadQuestion(0);
+        loadTimer();
+        if(totalSeconds <= 0){
+    submitTest(true);
+    return;
+}
+        startTimer();
+    }
+});
+};
+function loadTimer(){
+
+    let savedTime = localStorage.getItem("timer_"+testId);
+
+    if(savedTime){
+        totalSeconds = parseInt(savedTime);
+    } else {
+        totalSeconds = {{ test.duration }} * 60;
+        localStorage.setItem("timer_"+testId, totalSeconds);
+    }
+}
+    
+const scholarshipUsers = [
+    "92a76608-72c7-4a95-900d-b8fa126b72dc",
+    "69d93c9dfa9651c85478e061",
+    "f18a61fc-7427-4fb0-bc42-e32323589ad7",
+    "69de648c2f02975c209bf510"
+];
+
+const currentUserId = "{{ user_id }}";
+
+console.log("TEST ID:", testId);
+console.log("USER ID:", currentUserId);
+
+function showScholarshipModal(){
+    document.getElementById("scholarshipModal").style.display = "flex";
+}
+
+function closeScholarshipModal(){
+    document.getElementById("scholarshipModal").style.display = "none";
+}
+</script>
+ 
+</div>
+</body>
+</html>
