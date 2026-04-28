@@ -123,7 +123,8 @@ Payment integration 💳
 Video streaming integration 🎥
 Mobile app 📱
 AI-based recommendations 🤖
-👨‍💻 Author
 
+
+👨‍💻 Author:
 Developed by Mohd Hamzah
 
